@@ -1,0 +1,37 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Group {
+  id        String     @id @default(uuid())
+  name      String
+  currency  String     @default("BRL")
+  members   Member[]
+  expenses  Expense[]
+  createdAt DateTime   @default(now())
+}
+
+model Member {
+  id        String    @id @default(uuid())
+  name      String
+  groupId   String
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paid      Expense[] @relation("Payer")
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  description String
+  amount      Float    // Armazenado com ponto flutuante, mas tratado com centavos/arredondamento na aplicação
+  currency    String   // Moeda original do gasto (ex: USD, EUR, BRL)
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payerId     String
+  payer       Member   @relation("Payer", fields: [payerId], references: [id])
+  createdAt   DateTime @default(now())
+}
